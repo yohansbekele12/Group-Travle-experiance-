@@ -1,24 +1,27 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
+import dotenv from "dotenv";
 
+dotenv.config();
 const app = express();
-const port = 3000;
-app.set("view engine", "ejs"); //
+const port = process.env.PORT;
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.set("view engine", "ejs");
+
 const db = new pg.Client({
   user: "postgres",
   host: "localhost",
   database: "world",
-  password: "pass123",
-  port: 5432,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 });
+
 db.connect();
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
-
+let countries = [];
 let currentUserId = 2;
-
 let users = [];
 
 async function checkVisisted() {
@@ -96,7 +99,7 @@ app.post("/new", async (req, res) => {
       "INSERT INTO users (name,color) VALUES($1,$2); ",
       [name, color]
     );
-    currentUserId = result.rows[0].id;
+    console.log(result.rows);
 
     res.redirect("/");
   } catch (err) {
@@ -105,6 +108,7 @@ app.post("/new", async (req, res) => {
 });
 
 app.post("/delete", async (req, res) => {
+  console.log(req.body);
   const user = currentUserId;
   try {
     await db.query("DELETE FROM users WHERE id=$1;", [user]);
